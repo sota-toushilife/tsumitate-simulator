@@ -180,6 +180,12 @@
       -webkit-tap-highlight-color: transparent;
     }
     .btn-back:active { background: #f9fafb; }
+    /* ---- Confetti ---- */
+    @keyframes confettiFall {
+      0%   { transform: translateY(0) rotate(0deg); opacity: 1; }
+      80%  { opacity: 1; }
+      100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+    }
   </style>
 </head>
 <body>
@@ -261,9 +267,8 @@
   <div class="card card-hidden" id="result-card">
 
     <div class="result-hero">
-      <div class="result-hero-label">将来の運璨資産額</div>
+      <div class="result-hero-label">将来の資産額</div>
       <div class="result-hero-amount">
-        <span class="approx">約</span>
         <span id="result-total">---</span>
         <span class="unit">万円</span>
       </div>
@@ -296,11 +301,10 @@
 
     <!-- 銀行比較（コンパクト） -->
     <div class="bank-note">
-      🏦 大手銀行（年利0.1%）に預けた場合：約<strong id="bank-amount">---</strong>万円<br>
-      投資との差額 <strong style="color:#0284c7;">＋<span id="bank-diff">---</span>万円</strong>
+      銀行（年利0.1%）に預けた場合：<strong id="bank-amount">---</strong>円
     </div>
 
-    <!-- グラフ（面グラフ） -->
+        <!-- グラフ（面グラフ） -->
     <div class="chart-wrap">
       <div class="chart-title">資産の積み上がりイメージ</div>
       <div class="chart-legend">
@@ -317,7 +321,7 @@
       <div class="chart-note">※ あくまでシミュレーションです。実際の運用成果は異なります。<br>グラフに触れるとその時点の数値が確認できます。</div>
     </div>
 
-    <button class="btn-detail" onclick="goToDetail()">✏️ 数値を変えて再シミュ</button>
+    <button class="btn-detail" onclick="goToDetail()">✏️ もっと詳しくシミュレーションする！</button>
     <button class="btn-restart" onclick="restart()">🔄 最初からやり直す</button>
   </div>
 
@@ -409,6 +413,8 @@
     const ctx = document.getElementById('myChart').getContext('2d');
     if (chartInstance) chartInstance.destroy();
 
+    Chart.defaults.font.family = "-apple-system,'Hiragino Sans','Noto Sans JP','Yu Gothic',sans-serif";
+
     const labels = [], principalData = [], totalData = [];
     for (let y = 0; y <= years; y++) {
       if (y === 0) {
@@ -495,7 +501,8 @@
           x: {
             grid: { display: false },
             ticks: {
-              font: { size: 11 }, color: '#94a3b8',
+              font: { size: 11, family: "-apple-system,'Hiragino Sans','Noto Sans JP',sans-serif" },
+              color: '#94a3b8',
               maxTicksLimit: 7,
               maxRotation: 0,
             }
@@ -504,7 +511,8 @@
             beginAtZero: true,
             grid: { color: '#f0f9ff', lineWidth: 1 },
             ticks: {
-              font: { size: 11 }, color: '#94a3b8',
+              font: { size: 11, family: "-apple-system,'Hiragino Sans','Noto Sans JP',sans-serif" },
+              color: '#94a3b8',
               callback: v => v + '万'
             }
           }
@@ -557,10 +565,35 @@
     setTimeout(() => showResultCard(), 350);
   }
 
+  // --- Confetti ---
+  function launchConfetti() {
+    const colors = ['#f97316','#0284c7','#16a34a','#fbbf24','#ef4444','#8b5cf6','#ec4899'];
+    for (let i = 0; i < 80; i++) {
+      const el = document.createElement('div');
+      const size = Math.random() * 8 + 4;
+      el.style.cssText = [
+        'position:fixed',
+        `width:${size}px`,
+        `height:${size}px`,
+        `background:${colors[Math.floor(Math.random() * colors.length)]}`,
+        `border-radius:${Math.random() > 0.5 ? '50%' : '2px'}`,
+        `left:${Math.random() * 100}vw`,
+        'top:-12px',
+        'pointer-events:none',
+        'z-index:9999',
+        `animation:confettiFall ${Math.random() * 1.5 + 1}s ease-in forwards`,
+        `animation-delay:${Math.random() * 0.6}s`
+      ].join(';');
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 3000);
+    }
+  }
+
   // --- Result ---
   function showResultCard() {
     renderResult(state.amount, state.years, state.rate);
     showCard('result-card');
+    launchConfetti();
   }
 
   function renderResult(monthly, years, rate) {
@@ -587,8 +620,7 @@
     }
 
     // Bank
-    document.getElementById('bank-amount').textContent = fmtMan(bankTotal);
-    document.getElementById('bank-diff').textContent = fmtMan(diff);
+    document.getElementById('bank-amount').textContent = fmt(bankTotal);
 
     drawChart(monthly, years, rate);
   }
