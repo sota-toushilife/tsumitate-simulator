@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>爆速！積立シミュレーター</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+      background: linear-gradient(160deg, #fef3c7 0%, #fde68a 40%, #fef9ec 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .container { width: 100%; max-width: 420px; }
+
+    /* カバー */
+    .cover-card { background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 8px 32px rgba(0,0,0,0.12); }
+    .cover-img { width: 100%; display: block; }
+    .cover-btn-wrap { padding: 20px 24px 28px; }
+    .btn-start {
+      width: 100%; padding: 18px; border-radius: 14px; border: none;
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      color: white; font-size: 20px; font-weight: bold; cursor: pointer;
+      transition: all 0.15s ease; letter-spacing: 2px;
+      box-shadow: 0 4px 16px rgba(217,119,6,0.4);
+    }
+    .btn-start:active { transform: scale(0.97); opacity: 0.9; }
+
+    /* カード */
+    .card {
+      background: white; border-radius: 20px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.10);
+      overflow: hidden;
+    }
+    .card-inner { padding: 24px 20px; }
+
+    /* ヘッダー画像 */
+    .quiz-header-img {
+      display: block; width: 110px; height: 110px;
+      object-fit: cover; border-radius: 12px; margin: 0 auto 16px;
+    }
+
+    /* プログレス */
+    .progress-wrap { margin-bottom: 18px; }
+    .progress-label { display: flex; justify-content: space-between; font-size: 11px; color: #94a3b8; margin-bottom: 5px; }
+    .progress-bar-bg { background: #fde68a; border-radius: 99px; height: 6px; }
+    .progress-bar { background: linear-gradient(90deg, #f59e0b, #d97706); height: 6px; border-radius: 99px; transition: width 0.4s ease; }
+
+    /* 質問 */
+    .question-emoji { font-size: 38px; text-align: center; margin-bottom: 10px; }
+    .question-text { font-size: 18px; font-weight: bold; color: #1e293b; text-align: center; line-height: 1.5; margin-bottom: 18px; }
+
+    /* 選択ボタン */
+    .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+    .btn-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+    .btn-choice {
+      padding: 14px 8px; border-radius: 12px;
+      border: 2px solid #fde68a; background: #fffbeb;
+      color: #92400e; font-size: 14px; font-weight: bold;
+      cursor: pointer; transition: all 0.15s ease; text-align: center;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn-choice:hover { background: #fde68a; border-color: #f59e0b; }
+    .btn-choice:active { transform: scale(0.96); }
+    .btn-choice.selected { background: #f59e0b; color: white; border-color: #d97706; }
+    .btn-choice.rate-btn { flex-direction: column; }
+    .btn-choice .rate-label { font-size: 13px; }
+    .btn-choice .rate-num { font-size: 20px; font-weight: bold; }
+    .btn-choice .rate-tag { font-size: 10px; opacity: 0.8; }
+
+    /* 自由入力ボタン */
+    .btn-custom {
+      width: 100%; padding: 12px; border-radius: 12px;
+      border: 2px dashed #d1d5db; background: white;
+      color: #6b7280; font-size: 13px; font-weight: bold;
+      cursor: pointer; transition: all 0.15s ease; text-align: center;
+      margin-top: 4px;
+    }
+    .btn-custom:hover { border-color: #f59e0b; color: #d97706; }
+    .btn-custom.active { border-color: #f59e0b; background: #fffbeb; color: #d97706; }
+
+    /* 自由入力欄 */
+    .custom-input-wrap { display: none; margin-top: 10px; }
+    .custom-input-wrap.show { display: block; }
+    .custom-input {
+      width: 100%; padding: 12px 16px; border-radius: 12px;
+      border: 2px solid #fde68a; font-size: 18px; font-weight: bold;
+      color: #1e293b; text-align: center; outline: none;
+      transition: border-color 0.15s;
+    }
+    .custom-input:focus { border-color: #f59e0b; }
+    .input-hint { font-size: 11px; color: #9ca3af; text-align: center; margin-top: 6px; }
+
+    /* 次へボタン */
+    .btn-next {
+      width: 100%; padding: 16px; border-radius: 14px; border: none;
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      color: white; font-size: 17px; font-weight: bold;
+      cursor: pointer; transition: all 0.15s ease; margin-top: 14px;
+      box-shadow: 0 4px 12px rgba(217,119,6,0.3);
+    }
+    .btn-next:active { transform: scale(0.97); opacity: 0.9; }
+    .btn-next:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* スクリーン */
+    .screen { display: none; animation: fadeIn 0.25s ease; }
+    .screen.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* 結果画面 */
+    .result-top { text-align: center; padding: 8px 0 16px; }
+    .result-label { font-size: 12px; color: #6b7280; letter-spacing: 1px; margin-bottom: 4px; }
+    .result-amount { font-size: 38px; font-weight: bold; color: #d97706; line-height: 1.1; }
+    .result-amount span { font-size: 18px; }
+
+    .result-box {
+      background: #fffbeb; border-radius: 14px;
+      padding: 14px 16px; margin-bottom: 12px;
+    }
+    .result-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid #fde68a; }
+    .result-row:last-child { border-bottom: none; }
+    .result-row-label { font-size: 13px; color: #6b7280; }
+    .result-row-value { font-size: 15px; font-weight: bold; color: #1e293b; }
+
+    /* 1800万超えボックス */
+    .nisa-box {
+      background: #fef2f2; border: 1.5px solid #fca5a5;
+      border-radius: 14px; padding: 14px 16px; margin-bottom: 12px;
+    }
+    .nisa-box-title { font-size: 12px; color: #ef4444; font-weight: bold; margin-bottom: 8px; letter-spacing: 0.5px; }
+    .nisa-row { display: flex; justify-content: space-between; align-items: center; padding: 4px 0; }
+    .nisa-row-label { font-size: 13px; color: #6b7280; }
+    .nisa-row-value { font-size: 15px; font-weight: bold; }
+    .nisa-row-value.highlight { color: #ef4444; }
+    .nisa-row-value.green { color: #16a34a; }
+
+    /* 銀行比較 */
+    .bank-box {
+      background: #f0fdf4; border: 1.5px solid #86efac;
+      border-radius: 14px; padding: 14px 16px; margin-bottom: 16px;
+    }
+    .bank-box-title { font-size: 12px; color: #16a34a; font-weight: bold; margin-bottom: 8px; letter-spacing: 0.5px; }
+    .bank-diff { text-align: center; padding: 6px 0; }
+    .bank-diff-label { font-size: 12px; color: #6b7280; margin-bottom: 4px; }
+    .bank-diff-amount { font-size: 26px; font-weight: bold; color: #16a34a; }
+    .bank-diff-sub { font-size: 11px; color: #9ca3af; margin-top: 4px; }
+
+    /* グラフ */
+    .chart-wrap { margin-bottom: 16px; }
+    .chart-title { font-size: 13px; color: #6b7280; text-align: center; margin-bottom: 8px; }
+    .chart-container { position: relative; height: 200px; }
+
+    /* 凡例 */
+    .legend { display: flex; justify-content: center; gap: 16px; margin-bottom: 12px; }
+    .legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: #6b7280; }
+    .legend-dot { width: 10px; height: 10px; border-radius: 3px; }
+
+    /* アクションボタン */
+    .btn-detail {
+      width: 100%; padding: 14px; border-radius: 14px;
+      border: 2px solid #f59e0b; background: white;
+      color: #d97706; font-size: 14px; font-weight: bold;
+      cursor: pointer; transition: all 0.15s ease; margin-bottom: 10px;
+    }
+    .btn-detail:active { background: #fffbeb; }
+    .btn-restart {
+      width: 100%; padding: 13px; border-radius: 14px;
+      border: 2px solid #e5e7eb; background: white;
+      color: #6b7280; font-size: 14px; font-weight: bold;
+      cursor: pointer; transition: all 0.15s ease;
+    }
+    .btn-restart:active { background: #f9fafb; }
+
+    /* 詳細入力モード */
+    .detail-label { font-size: 13px; color: #6b7280; margin-bottom: 6px; font-weight: bold; }
+    .detail-section { margin-bottom: 18px; }
+    .detail-input {
+      width: 100%; padding: 12px 16px; border-radius: 12px;
+      border: 2px solid #fde68a; font-size: 18px; font-weight: bold;
+      color: #1e293b; text-align: center; outline: none;
+    }
+    .detail-input:focus { border-color: #f59e0b; }
+    .detail-hint { font-size: 11px; color: #9ca3af; margin-top: 5px; text-align: center; }
+    .detail-current { font-size: 12px; color: #f59e0b; text-align: center; margin-top: 4px; font-weight: bold; }
+
+    .cover-screen { display: none; }
+    .cover-screen.active { display: block; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <!-- カバー -->
+  <div class="cover-screen active" id="cover">
+    <div class="cover-card">
+      <img src="4.png" alt="積立シミュレーター" class="cover-img">
+      <div class="cover-btn-wrap">
+        <button class="btn-start" onclick="startApp()">シミュレーション開始 🚀</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- クイズカード -->
+  <div class="card" id="quiz-card" style="display:none;">
+    <div class="card-inner">
+      <img src="4正方形.png" alt="積立シミュレーター" class="quiz-header-img">
+
+      <!-- Q1: 毎月の積立額 -->
+      <div class="screen active" id="q1">
+        <div class="progress-wrap">
+          <div class="progress-label"><span>STEP 1</span><span>1 / 3</span></div>
+          <div class="progress-bar-bg"><div class="progress-bar" style="width:33%"></div></div>
+        </div>
+        <div class="question-emoji">💰</div>
+        <div class="question-text">毎月いくら<br>積み立てる？</div>
+        <div class="btn-grid">
+          <button class="btn-choice" onclick="selectAmount(10000, this)">1万円</button>
+          <button class="btn-choice" onclick="selectAmount(30000, this)">3万円</button>
+          <button class="btn-choice" onclick="selectAmount(50000, this)">5万円</button>
+          <button class="btn-choice" onclick="selectAmount(70000, this)">7万円</button>
+          <button class="btn-choice" onclick="selectAmount(100000, this)" style="grid-column:span 2;">10万円</button>
+        </div>
+        <button class="btn-custom" id="custom-amount-btn" onclick="toggleCustom('amount')">✏️ 自分で入力する</button>
+        <div class="custom-input-wrap" id="custom-amount-wrap">
+          <input class="custom-input" id="custom-amount-input" type="text" placeholder="例：20000" oninput="onCustomAmountInput()">
+          <div class="input-hint">※ 全角・漢数字もOK（例：２万、20000、2万円）</div>
+        </div>
+        <button class="btn-next" id="btn-next-q1" onclick="goToQ2()" disabled>次へ →</button>
+      </div>
+
+      <!-- Q2: 積立年数 -->
+      <div class="screen" id="q2">
+        <div class="progress-wrap">
+          <div class="progress-label"><span>STEP 2</span><span>2 / 3</span></div>
+          <div class="progress-bar-bg"><div class="progress-bar" style="width:66%"></div></div>
+        </div>
+        <div class="question-emoji">📅</div>
+        <div class="question-text">何年<br>積み立てる？</div>
+        <div class="btn-grid">
+          <button class="btn-choice" onclick="selectYears(5, this)">5年</button>
+          <button class="btn-choice" onclick="selectYears(10, this)">10年</button>
+          <button class="btn-choice" onclick="selectYears(20, this)">20年</button>
+          <button class="btn-choice" onclick="selectYears(30, this)">30年</button>
+        </div>
+        <button class="btn-custom" id="custom-years-btn" onclick="toggleCustom('years')">✏️ 自分で入力する</button>
+        <div class="custom-input-wrap" id="custom-years-wrap">
+          <input class="custom-input" id="custom-years-input" type="text" placeholder="例：15" oninput="onCustomYearsInput()">
+          <div class="input-hint">※ 全角数字もOK（例：１５年、15）</div>
+        </div>
+        <button class="btn-next" id="btn-next-q2" onclick="goToQ3()" disabled>次へ →</button>
+      </div>
+
+      <!-- Q3: リターン率 -->
+      <div class="screen" id="q3">
+        <div class="progress-wrap">
+          <div class="progress-label"><span>STEP 3</span><span>3 / 3</span></div>
+          <div class="progress-bar-bg"><div class="progress-bar" style="width:100%"></div></div>
+        </div>
+        <div class="question-emoji">📈</div>
+        <div class="question-text">リターンは<br>どうする？</div>
+        <div class="btn-grid-3" style="margin-bottom:10px;">
+          <button class="btn-choice rate-btn" onclick="selectRate(4, this)">
+            <div class="rate-tag">超堅実</div>
+            <div class="rate-num">4%</div>
+          </button>
+          <button class="btn-choice rate-btn" onclick="selectRate(6, this)">
+            <div class="rate-tag">現実的</div>
+            <div class="rate-num">6%</div>
+          </button>
+          <button class="btn-choice rate-btn" onclick="selectRate(8, this)">
+            <div class="rate-tag">欲張り</div>
+            <div class="rate-num">8%</div>
+          </button>
+        </div>
+        <button class="btn-custom" id="custom-rate-btn" onclick="toggleCustom('rate')">✏️ 自分で入力する</button>
+        <div class="custom-input-wrap" id="custom-rate-wrap">
+          <input class="custom-input" id="custom-rate-input" type="text" placeholder="例：5.5" oninput="onCustomRateInput()">
+          <div class="input-hint">※ 全角数字もOK（例：５、5.5）</div>
+        </div>
+        <button class="btn-next" id="btn-next-q3" onclick="showResult()" disabled>結果を見る 🎉</button>
+      </div>
+
+      <!-- 結果画面 -->
+      <div class="screen" id="result">
+        <div class="progress-wrap">
+          <div class="progress-bar-bg"><div class="progress-bar" style="width:100%"></div></div>
+        </div>
+        <div style="height:10px"></div>
+
+        <div class="result-top">
+          <div class="result-label" id="result-subtitle">▼ あなたの将来資産</div>
+          <div class="result-amount"><span>約</span> <span id="result-total">---</span> <span>万円</span></div>
+        </div>
+
+        <div class="result-box">
+          <div class="result-row">
+            <span class="result-row-label">積立元本</span>
+            <span class="result-row-value" id="result-principal">---</span>
+          </div>
+          <div class="result-row">
+            <span class="result-row-label">運用益</span>
+            <span class="result-row-value" style="color:#d97706;" id="result-gain">---</span>
+          </div>
+          <div class="result-row">
+            <span class="result-row-label">毎月</span>
+            <span class="result-row-value" id="result-monthly">---</span>
+          </div>
+          <div class="result-row" style="border:none;">
+            <span class="result-row-label">期間 / 利率</span>
+            <span class="result-row-value" id="result-params">---</span>
+          </div>
+        </div>
+
+        <!-- 1800万超え（条件付き表示） -->
+        <div class="nisa-box" id="nisa-box" style="display:none;">
+          <div class="nisa-box-title">⚠️ NISA非課税枠（1,800万円）を超えるケース</div>
+          <div class="nisa-row">
+            <span class="nisa-row-label">元本が超える時期</span>
+            <span class="nisa-row-value" id="nisa-exceed-month">---</span>
+          </div>
+          <div class="nisa-row">
+            <span class="nisa-row-label">課税される運用益</span>
+            <span class="nisa-row-value highlight" id="nisa-taxable-gain">---</span>
+          </div>
+          <div class="nisa-row">
+            <span class="nisa-row-label">税金（20.315%）</span>
+            <span class="nisa-row-value highlight" id="nisa-tax">---</span>
+          </div>
+          <div class="nisa-row" style="border-top:1px solid #fca5a5;margin-top:6px;padding-top:6px;">
+            <span class="nisa-row-label" style="font-weight:bold;color:#1e293b;">税引き後の手取り</span>
+            <span class="nisa-row-value green" style="font-size:18px;" id="nisa-after-tax">---</span>
+          </div>
+        </div>
+
+        <!-- 銀行比較 -->
+        <div class="bank-box">
+          <div class="bank-box-title">🏦 銀行に預けるだけだと…</div>
+          <div class="bank-diff">
+            <div class="bank-diff-label">銀行預金（年利0.001%）との差額</div>
+            <div class="bank-diff-amount">＋<span id="bank-diff">---</span>万円</div>
+            <div class="bank-diff-sub" id="bank-amount-sub">（銀行では約 --- 万円）</div>
+          </div>
+        </div>
+
+        <!-- グラフ -->
+        <div class="chart-wrap">
+          <div class="chart-title">資産の積み上がりイメージ</div>
+          <div class="legend">
+            <div class="legend-item"><div class="legend-dot" style="background:#fde68a;"></div>積立元本</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#f59e0b;"></div>運用益</div>
+          </div>
+          <div class="chart-container">
+            <canvas id="myChart"></canvas>
+          </div>
+          <div style="font-size:10px;color:#9ca3af;text-align:center;margin-top:4px;">※ 大手銀行普通預金0.001%で計算。元本1,800万円超は特定口座（課税）で運用を継続する想定。</div>
+        </div>
+
+        <button class="btn-detail" onclick="goToDetail()">🔍 もっと詳しく診断する</button>
+        <button class="btn-restart" onclick="restart()">🔄 最初からやり直す</button>
+      </div>
+
+      <!-- 詳細入力画面 -->
+      <div class="screen" id="detail">
+        <div class="question-emoji">✏️</div>
+        <div class="question-text" style="margin-bottom:20px;">詳細シミュレーション</div>
+
+        <div class="detail-section">
+          <div class="detail-label">💰 毎月の積立額</div>
+          <input class="detail-input" id="detail-amount-input" type="text" placeholder="例：50000">
+          <div class="detail-current" id="detail-amount-current"></div>
+          <div class="detail-hint">全角・漢数字OK（例：５万、50000、5万円）</div>
+        </div>
+        <div class="detail-section">
+          <div class="detail-label">📅 積立年数</div>
+          <input class="detail-input" id="detail-years-input" type="text" placeholder="例：20">
+          <div class="detail-current" id="detail-years-current"></div>
+          <div class="detail-hint">全角OK（例：２０年、20）</div>
+        </div>
+        <div class="detail-section">
+          <div class="detail-label">📈 年利（%）</div>
+          <input class="detail-input" id="detail-rate-input" type="text" placeholder="例：5.5">
+          <div class="detail-current" id="detail-rate-current"></div>
+          <div class="detail-hint">全角OK（例：５．５、5.5）</div>
+        </div>
+
+        <button class="btn-next" onclick="recalcDetail()">再計算する 📊</button>
+        <button class="btn-restart" style="margin-top:10px;" onclick="backToResult()">← 結果に戻る</button>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // --- 状態管理 ---
+  let state = {
+    amount: null,   // 月額（円）
+    years: null,    // 年数
+    rate: null,     // 年利（%）
+  };
+  let chartInstance = null;
+
+  // --- 全角・漢数字 → 数値変換 ---
+  function parseJpNumber(str) {
+    if (!str) return NaN;
+    str = String(str).trim();
+    // 全角���字→半角
+    str = str.replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0));
+    // 全角ピリオド→半角
+    str = str.replace(/．/g, '.');
+    // 漢数字変換（簡易）
+    str = str.replace(/億/g, '00000000');
+    str = str.replace(/千万/g, '0000000');
+    str = str.replace(/百万/g, '000000');
+    str = str.replace(/十万/g, '00000');
+    str = str.replace(/万/g, '0000');
+    str = str.replace(/千/g, '000');
+    str = str.replace(/百/g, '00');
+    str = str.replace(/十/g, '0');
+    // 数字・ドット以外除去
+    str = str.replace(/[^0-9.]/g, '');
+    const n = parseFloat(str);
+    return isNaN(n) ? NaN : n;
+  }
+
+  // --- 金額フォーマット ---
+  function fmt(n) {
+    return Math.round(n).toLocaleString('ja-JP');
+  }
+  function fmtMan(n) {
+    return Math.round(n / 10000).toLocaleString('ja-JP');
+  }
+
+  // --- シミュレーション計算 ---
+  function calcSimulation(monthlyAmount, years, annualRate) {
+    const mr = annualRate / 100 / 12;
+    const months = years * 12;
+    const principal = monthlyAmount * months;
+
+    // 積立複利計算
+    let total;
+    if (mr < 1e-10) {
+      total = principal;
+    } else {
+      total = monthlyAmount * (Math.pow(1 + mr, months) - 1) / mr;
+    }
+    const gain = total - principal;
+
+    // NISA 1800万超え計算
+    const NISA_LIMIT = 18000000;
+    let afterTax = total;
+    let taxAmount = 0;
+    let taxableGain = 0;
+    let exceedMonth = null; // 元本がNISA枠を超える月
+
+    if (principal > NISA_LIMIT) {
+      // 元本が1800万超え → NISA満了後は特定口座で積立継続
+      const nisaMonths = Math.floor(NISA_LIMIT / monthlyAmount); // NISA口座が満杯になる月
+      exceedMonth = nisaMonths;
+
+      // NISA期間の積立資産
+      let nisaTotal;
+      if (mr < 1e-10) {
+        nisaTotal = monthlyAmount * nisaMonths;
+      } else {
+        nisaTotal = monthlyAmount * (Math.pow(1 + mr, nisaMonths) - 1) / mr;
+      }
+
+      // 残り期間（特定口座）
+      const remainMonths = months - nisaMonths;
+
+      // NISA分を残り期間も運用
+      const nisaFinal = nisaTotal * Math.pow(1 + mr, remainMonths);
+
+      // 特定口座での積立
+      let taxableTotal;
+      if (mr < 1e-10) {
+        taxableTotal = monthlyAmount * remainMonths;
+      } else {
+        taxableTotal = monthlyAmount * (Math.pow(1 + mr, remainMonths) - 1) / mr;
+      }
+      const taxablePrincipal = monthlyAmount * remainMonths;
+      taxableGain = Math.max(0, taxableTotal - taxablePrincipal);
+      taxAmount = taxableGain * 0.20315;
+
+      total = nisaFinal + taxableTotal;
+      afterTax = total - taxAmount;
+    }
+
+    return { total, principal, gain, afterTax, taxAmount, taxableGain, exceedMonth };
+  }
+
+  function calcBank(monthlyAmount, years) {
+    const mr = 0.001 / 100 / 12; // 年0.001%
+    const months = years * 12;
+    if (mr < 1e-12) return monthlyAmount * months;
+    return monthlyAmount * (Math.pow(1 + mr, months) - 1) / mr;
+  }
+
+  // --- グラフ描画 ---
+  function drawChart(monthlyAmount, years, annualRate) {
+    const ctx = document.getElementById('myChart').getContext('2d');
+    if (chartInstance) { chartInstance.destroy(); }
+
+    // チェックポイントを設定（最大5点）
+    const checkpoints = [];
+    const step = Math.max(1, Math.ceil(years / 5));
+    for (let y = step; y <= years; y += step) {
+      if (checkpoints.length < 4) checkpoints.push(y);
+    }
+    if (checkpoints[checkpoints.length - 1] !== years) checkpoints.push(years);
+
+    const labels = checkpoints.map(y => `${y}年後`);
+    const principals = [];
+    const gains = [];
+    const NISA_LIMIT = 18000000;
+
+    checkpoints.forEach(y => {
+      const { total, principal } = calcSimulation(monthlyAmount, y, annualRate);
+      principals.push(Math.round(principal / 10000));
+      gains.push(Math.round(Math.max(0, total - principal) / 10000));
+    });
+
+    // 1800万ラインのy値（万円）
+    const nisaLine = 180;
+
+    chartInstance = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [
+          {
+            label: '積立元本',
+            data: principals,
+            backgroundColor: '#fde68a',
+            borderRadius: 6,
+            borderSkipped: false,
+          },
+          {
+            label: '運用益',
+            data: gains,
+            backgroundColor: '#f59e0b',
+            borderRadius: 6,
+            borderSkipped: false,
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y.toLocaleString()}万円`
+            }
+          },
+          annotation: {}
+        },
+        scales: {
+          x: { stacked: true, grid: { display: false } },
+          y: {
+            stacked: true,
+            ticks: {
+              callback: v => `${v}万`
+            },
+            grid: { color: '#f3f4f6' }
+          }
+        }
+      }
+    });
+
+    // 1800万ライン（シンプルな方法で追加）
+    const maxVal = Math.max(...principals.map((p, i) => p + gains[i]));
+    if (maxVal > nisaLine) {
+      // プラグインなしでアノテーション的なものを追加
+      const originalDraw = chartInstance.draw.bind(chartInstance);
+      chartInstance.draw = function() {
+        originalDraw();
+        const chart = chartInstance;
+        const ctx2 = chart.ctx;
+        const yAxis = chart.scales.y;
+        const xAxis = chart.scales.x;
+        const yPx = yAxis.getPixelForValue(nisaLine);
+        ctx2.save();
+        ctx2.beginPath();
+        ctx2.moveTo(xAxis.left, yPx);
+        ctx2.lineTo(xAxis.right, yPx);
+        ctx2.strokeStyle = '#ef4444';
+        ctx2.lineWidth = 1.5;
+        ctx2.setLineDash([4, 4]);
+        ctx2.stroke();
+        ctx2.fillStyle = '#ef4444';
+        ctx2.font = 'bold 10px sans-serif';
+        ctx2.fillText('NISA上限 1,800万', xAxis.left + 4, yPx - 4);
+        ctx2.restore();
+      };
+      chartInstance.draw();
+    }
+  }
+
+  // --- 画面遷移 ---
+  function startApp() {
+    document.getElementById('cover').classList.remove('active');
+    document.getElementById('quiz-card').style.display = 'block';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function showScreen(id) {
+    document.querySelectorAll('#quiz-card .screen.active').forEach(el => el.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // --- Q1: 月額選択 ---
+  let selectedAmountBtn = null;
+  function selectAmount(val, btn) {
+    if (selectedAmountBtn) selectedAmountBtn.classList.remove('selected');
+    selectedAmountBtn = btn;
+    btn.classList.add('selected');
+    state.amount = val;
+    // カスタム入力を閉じる
+    document.getElementById('custom-amount-wrap').classList.remove('show');
+    document.getElementById('custom-amount-btn').classList.remove('active');
+    document.getElementById('btn-next-q1').disabled = false;
+  }
+
+  function toggleCustom(type) {
+    const wrap = document.getElementById(`custom-${type}-wrap`);
+    const btn = document.getElementById(`custom-${type}-btn`);
+    const isShow = wrap.classList.contains('show');
+    if (isShow) {
+      wrap.classList.remove('show');
+      btn.classList.remove('active');
+    } else {
+      wrap.classList.add('show');
+      btn.classList.add('active');
+      document.getElementById(`custom-${type}-input`).focus();
+    }
+  }
+
+  function onCustomAmountInput() {
+    const val = parseJpNumber(document.getElementById('custom-amount-input').value);
+    if (!isNaN(val) && val > 0) {
+      state.amount = val;
+      if (selectedAmountBtn) { selectedAmountBtn.classList.remove('selected'); selectedAmountBtn = null; }
+      document.getElementById('btn-next-q1').disabled = false;
+    } else {
+      document.getElementById('btn-next-q1').disabled = true;
+    }
+  }
+
+  function goToQ2() {
+    if (!state.amount) return;
+    showScreen('q2');
+  }
+
+  // --- Q2: 年数選択 ---
+  let selectedYearsBtn = null;
+  function selectYears(val, btn) {
+    if (selectedYearsBtn) selectedYearsBtn.classList.remove('selected');
+    selectedYearsBtn = btn;
+    btn.classList.add('selected');
+    state.years = val;
+    document.getElementById('custom-years-wrap').classList.remove('show');
+    document.getElementById('custom-years-btn').classList.remove('active');
+    document.getElementById('btn-next-q2').disabled = false;
+  }
+
+  function onCustomYearsInput() {
+    const val = parseJpNumber(document.getElementById('custom-years-input').value);
+    if (!isNaN(val) && val > 0 && val <= 100) {
+      state.years = val;
+      if (selectedYearsBtn) { selectedYearsBtn.classList.remove('selected'); selectedYearsBtn = null; }
+      document.getElementById('btn-next-q2').disabled = false;
+    } else {
+      document.getElementById('btn-next-q2').disabled = true;
+    }
+  }
+
+  function goToQ3() {
+    if (!state.years) return;
+    showScreen('q3');
+  }
+
+  // --- Q3: 利率選択 ---
+  let selectedRateBtn = null;
+  function selectRate(val, btn) {
+    if (selectedRateBtn) selectedRateBtn.classList.remove('selected');
+    selectedRateBtn = btn;
+    btn.classList.add('selected');
+    state.rate = val;
+    document.getElementById('custom-rate-wrap').classList.remove('show');
+    document.getElementById('custom-rate-btn').classList.remove('active');
+    document.getElementById('btn-next-q3').disabled = false;
+  }
+
+  function onCustomRateInput() {
+    const val = parseJpNumber(document.getElementById('custom-rate-input').value);
+    if (!isNaN(val) && val >= 0 && val <= 50) {
+      state.rate = val;
+      if (selectedRateBtn) { selectedRateBtn.classList.remove('selected'); selectedRateBtn = null; }
+      document.getElementById('btn-next-q3').disabled = false;
+    } else {
+      document.getElementById('btn-next-q3').disabled = true;
+    }
+  }
+
+  // --- 結果表示 ---
+  function showResult() {
+    if (!state.rate) return;
+    renderResult(state.amount, state.years, state.rate);
+    showScreen('result');
+  }
+
+  function renderResult(amount, years, rate) {
+    const { total, principal, gain, afterTax, taxAmount, taxableGain, exceedMonth } = calcSimulation(amount, years, rate);
+    const bankTotal = calcBank(amount, years);
+    const diff = total - bankTotal;
+
+    // メイン結果
+    document.getElementById('result-total').textContent = fmtMan(total);
+    document.getElementById('result-subtitle').textContent =
+      `毎月${fmt(amount)}円 × ${years}年 × 年利${rate}%`;
+    document.getElementById('result-principal').textContent = `${fmtMan(principal)}万円`;
+    document.getElementById('result-gain').textContent = `＋${fmtMan(gain)}万円`;
+    document.getElementById('result-monthly').textContent = `${fmt(amount)}円`;
+    document.getElementById('result-params').textContent = `${years}年 / 年利${rate}%`;
+
+    // 1800万超え
+    const nisaBox = document.getElementById('nisa-box');
+    if (exceedMonth !== null) {
+      nisaBox.style.display = 'block';
+      const exceedYears = Math.floor(exceedMonth / 12);
+      const exceedMonthRem = exceedMonth % 12;
+      let exceedStr = `${exceedYears}年`;
+      if (exceedMonthRem > 0) exceedStr += `${exceedMonthRem}ヶ月後`;
+      document.getElementById('nisa-exceed-month').textContent = exceedStr;
+      document.getElementById('nisa-taxable-gain').textContent = `${fmtMan(taxableGain)}万円`;
+      document.getElementById('nisa-tax').textContent = `−${fmtMan(taxAmount)}万円`;
+      document.getElementById('nisa-after-tax').textContent = `約${fmtMan(afterTax)}万円`;
+    } else {
+      nisaBox.style.display = 'none';
+    }
+
+    // 銀行比較
+    document.getElementById('bank-diff').textContent = fmtMan(diff);
+    document.getElementById('bank-amount-sub').textContent = `（銀行では約${fmtMan(bankTotal)}万円）`;
+
+    // グラフ
+    drawChart(amount, years, rate);
+  }
+
+  // --- 詳細入力 ---
+  function goToDetail() {
+    // 現在値を引き継ぐ
+    document.getElementById('detail-amount-input').value = state.amount ? fmt(state.amount) : '';
+    document.getElementById('detail-years-input').value = state.years || '';
+    document.getElementById('detail-rate-input').value = state.rate || '';
+    document.getElementById('detail-amount-current').textContent = state.amount ? `現在: 月${fmt(state.amount)}円` : '';
+    document.getElementById('detail-years-current').textContent = state.years ? `現在: ${state.years}年` : '';
+    document.getElementById('detail-rate-current').textContent = state.rate ? `現在: 年利${state.rate}%` : '';
+    showScreen('detail');
+  }
+
+  function recalcDetail() {
+    const amount = parseJpNumber(document.getElementById('detail-amount-input').value);
+    const years = parseJpNumber(document.getElementById('detail-years-input').value);
+    const rate = parseJpNumber(document.getElementById('detail-rate-input').value);
+
+    if (isNaN(amount) || amount <= 0) { alert('月額を正しく入力してください'); return; }
+    if (isNaN(years) || years <= 0 || years > 100) { alert('年数を正しく入力してください'); return; }
+    if (isNaN(rate) || rate < 0 || rate > 50) { alert('年利を正しく入力してください'); return; }
+
+    state.amount = amount;
+    state.years = years;
+    state.rate = rate;
+    renderResult(amount, years, rate);
+    showScreen('result');
+  }
+
+  function backToResult() {
+    showScreen('result');
+  }
+
+  // --- リスタート ---
+  function restart() {
+    state = { amount: null, years: null, rate: null };
+    selectedAmountBtn = null;
+    selectedYearsBtn = null;
+    selectedRateBtn = null;
+    document.querySelectorAll('.btn-choice.selected').forEach(b => b.classList.remove('selected'));
+    document.querySelectorAll('.custom-input-wrap.show').forEach(w => w.classList.remove('show'));
+    document.querySelectorAll('.btn-custom.active').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.custom-input').forEach(i => i.value = '');
+    document.getElementById('btn-next-q1').disabled = true;
+    document.getElementById('btn-next-q2').disabled = true;
+    document.getElementById('btn-next-q3').disabled = true;
+    document.getElementById('quiz-card').style.display = 'none';
+    document.getElementById('cover').classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+</script>
+</body>
+</html>
