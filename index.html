@@ -20,9 +20,16 @@
 
     .container { width: 100%; max-width: 420px; }
 
-    /* カバー */
+    /* カバc�� */
     .cover-card { background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 8px 32px rgba(0,0,0,0.12); }
-    .cover-img { width: 100%; display: block; }
+    .cover-graphic {
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 55%, #b45309 100%);
+      padding: 44px 24px 36px;
+      text-align: center;
+    }
+    .cover-graphic-icon { font-size: 72px; margin-bottom: 14px; line-height: 1; }
+    .cover-graphic-title { font-size: 26px; font-weight: bold; color: white; line-height: 1.35; margin-bottom: 8px; text-shadow: 0 2px 8px rgba(0,0,0,0.18); }
+    .cover-graphic-sub { font-size: 14px; color: rgba(255,255,255,0.88); }
     .cover-btn-wrap { padding: 20px 24px 28px; }
     .btn-start {
       width: 100%; padding: 18px; border-radius: 14px; border: none;
@@ -41,10 +48,12 @@
     }
     .card-inner { padding: 24px 20px; }
 
-    /* ヘッダー画像 */
-    .quiz-header-img {
-      display: block; width: 110px; height: 110px;
-      object-fit: cover; border-radius: 12px; margin: 0 auto 16px;
+    /* ヘッダーアイコン */
+    .quiz-header-icon {
+      display: block; width: 72px; height: 72px; line-height: 72px;
+      font-size: 42px; text-align: center;
+      background: linear-gradient(135deg, #fde68a, #f59e0b);
+      border-radius: 18px; margin: 0 auto 16px;
     }
 
     /* プログレス */
@@ -200,7 +209,11 @@
   <!-- カバー -->
   <div class="cover-screen active" id="cover">
     <div class="cover-card">
-      <img src="4.png" alt="積立シミュレーター" class="cover-img">
+      <div class="cover-graphic">
+        <div class="cover-graphic-icon">💰</div>
+        <div class="cover-graphic-title">爆速！積立<br>シミュレーター</div>
+        <div class="cover-graphic-sub">3問に答えるだけで将来資産がわかる</div>
+      </div>
       <div class="cover-btn-wrap">
         <button class="btn-start" onclick="startApp()">シミュレーション開始 🚀</button>
       </div>
@@ -210,7 +223,7 @@
   <!-- クイズカード -->
   <div class="card" id="quiz-card" style="display:none;">
     <div class="card-inner">
-      <img src="4正方形.png" alt="積立シミュレーター" class="quiz-header-img">
+      <div class="quiz-header-icon">💰</div>
 
       <!-- Q1: 毎月の積立額 -->
       <div class="screen active" id="q1">
@@ -230,7 +243,7 @@
         <button class="btn-custom" id="custom-amount-btn" onclick="toggleCustom('amount')">✏️ 自分で入力する</button>
         <div class="custom-input-wrap" id="custom-amount-wrap">
           <input class="custom-input" id="custom-amount-input" type="text" placeholder="例：20000" oninput="onCustomAmountInput()">
-          <div class="input-hint">※ 全角・漢数字もOK（例：２万、20000、2万円）</div>
+          <div class="input-hint">※ 全角・漢数字OK/��例：２万、20000、2万円）</div>
         </div>
         <button class="btn-next" id="btn-next-q1" onclick="goToQ2()" disabled>次へ →</button>
       </div>
@@ -334,7 +347,7 @@
             <span class="nisa-row-value highlight" id="nisa-tax">---</span>
           </div>
           <div class="nisa-row" style="border-top:1px solid #fca5a5;margin-top:6px;padding-top:6px;">
-            <span class="nisa-row-label" style="font-weight:bold;color:#1e293b;">税引き後の手取り</span>
+            <span class="nisa-row-label" style="font-weight:bold;color:#1e293b;">税引き後は手取り</span>
             <span class="nisa-row-value green" style="font-size:18px;" id="nisa-after-tax">---</span>
           </div>
         </div>
@@ -412,7 +425,7 @@
   function parseJpNumber(str) {
     if (!str) return NaN;
     str = String(str).trim();
-    // 全角���字→半角
+    // 全角数字→半角
     str = str.replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0));
     // 全角ピリオド→半角
     str = str.replace(/．/g, '.');
@@ -459,7 +472,7 @@
     let afterTax = total;
     let taxAmount = 0;
     let taxableGain = 0;
-    let exceedMonth = null; // 元本がNISA枠を超える月
+    let exceedMonth = null; // 元本8�cNISA枠を超える月
 
     if (principal > NISA_LIMIT) {
       // 元本が1800万超え → NISA満了後は特定口座で積立継続
@@ -742,7 +755,7 @@
       const exceedYears = Math.floor(exceedMonth / 12);
       const exceedMonthRem = exceedMonth % 12;
       let exceedStr = `${exceedYears}年`;
-      if (exceedMonthRem > 0) exceedStr += `${exceedMonthRem}ヶ月後`;
+      if (exceedMonthRem > 0) exceedStr += `${exceedMonthRem}ヶf��後`;
       document.getElementById('nisa-exceed-month').textContent = exceedStr;
       document.getElementById('nisa-taxable-gain').textContent = `${fmtMan(taxableGain)}万円`;
       document.getElementById('nisa-tax').textContent = `−${fmtMan(taxAmount)}万円`;
