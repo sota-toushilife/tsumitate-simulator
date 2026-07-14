@@ -270,7 +270,7 @@
       <div class="result-hero-label">将来の資産額</div>
       <div class="result-hero-amount">
         <span id="result-total">---</span>
-        <span class="unit">万円</span>
+        <span class="unit" id="result-unit">万円</span>
       </div>
       <div class="result-hero-sub" id="result-params-sub">---</div>
     </div>
@@ -372,7 +372,15 @@
     return isNaN(n) ? NaN : n;
   }
   function fmt(n) { return Math.round(n).toLocaleString('ja-JP'); }
-  function fmtMan(n) { return Math.round(n / 10000).toLocaleString('ja-JP'); }
+  function fmtMan(n) {
+    const man = Math.round(n / 10000);
+    if (man >= 10000) {
+      const oku = Math.floor(man / 10000);
+      const remain = man % 10000;
+      return remain > 0 ? oku.toLocaleString('ja-JP') + '億' + remain.toLocaleString('ja-JP') + '万' : oku.toLocaleString('ja-JP') + '億';
+    }
+    return man.toLocaleString('ja-JP') + '万';
+  }
 
   // --- Calculation ---
   function calcSim(monthly, years, annualRate) {
@@ -601,11 +609,20 @@
     const bankTotal = calcBank(monthly, years);
     const diff = total - bankTotal;
 
-    document.getElementById('result-total').textContent = fmtMan(total);
+    const totalStr = fmtMan(total);
+    document.getElementById('result-total').textContent = totalStr;
+    const unitEl = document.getElementById('result-unit');
+    if (unitEl) unitEl.style.display = totalStr.includes('億') ? 'none' : '';
     document.getElementById('result-params-sub').textContent =
       `月${fmt(monthly)}円 × ${years}年 × 年利${rate}%`;
-    document.getElementById('result-principal').textContent = `${fmtMan(principal)}万円`;
-    document.getElementById('result-gain').textContent = `＋${fmtMan(gain)}万円`;
+    (function(){
+      const ps = fmtMan(principal);
+      document.getElementById('result-principal').textContent = ps.includes('億') || ps.includes('万') ? ps : ps + '万円';
+    })();
+    (function(){
+      const gs = fmtMan(gain);
+      document.getElementById('result-gain').textContent = '＋' + (gs.includes('億') || gs.includes('万') ? gs : gs + '万円');
+    })();
 
     // NISA
     const nisaBox = document.getElementById('nisa-box');
