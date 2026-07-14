@@ -190,7 +190,7 @@
     <div class="cover-card">
       <img src="4.png" alt="積立シミュレーター" class="cover-img">
       <div class="cover-body">
-        <p class="cover-disclaimer">※本ツールはシミュレーションです。将来の運用成果を保証するものではありません。</p>
+        <p class="cover-disclaimer">※本ツールはシミュレーションです。将来の運璨成果を保証するものではありません。</p>
         <button class="btn-start" onclick="startApp()">シミュレーション開始 🚀</button>
       </div>
     </div>
@@ -261,7 +261,7 @@
   <div class="card card-hidden" id="result-card">
 
     <div class="result-hero">
-      <div class="result-hero-label">将来の運用資産額</div>
+      <div class="result-hero-label">将来の運璨資産額</div>
       <div class="result-hero-amount">
         <span class="approx">約</span>
         <span id="result-total">---</span>
@@ -314,7 +314,7 @@
       <div class="chart-container">
         <canvas id="myChart"></canvas>
       </div>
-      <div class="chart-note">※ あくまでシミュレーションです。<br>グラフに触れるとその時点の数値が確認できます。</div>
+      <div class="chart-note">※ あくまでシミュレーションです。実際の運用成果は異なります。<br>グラフに触れるとその時点の数値が確認できます。</div>
     </div>
 
     <button class="btn-detail" onclick="goToDetail()">✏️ 数値を変えて再シミュ</button>
@@ -359,7 +359,7 @@
     str = String(str).trim()
       .replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0))
       .replace(/．/g, '.')
-      .replace(/億/g, '00000000').replace(/千万/g, '0000000')
+      .replace(/儒/g, '00000000').replace(/千万/g, '0000000')
       .replace(/百万/g, '000000').replace(/十万/g, '00000')
       .replace(/万/g, '0000').replace(/千/g, '000')
       .replace(/百/g, '00').replace(/十/g, '0')
@@ -418,7 +418,7 @@
         continue;
       }
       const { total, principal } = calcSim(monthly, y, rate);
-      labels.push(`${y}年後`);
+      labels.push(`${y}鹴後`);
       principalData.push(Math.round(principal / 10000));
       totalData.push(Math.round(total / 10000));
     }
@@ -598,7 +598,6 @@
     document.getElementById('detail-amount-input').value = state.amount ? String(state.amount) : '';
     document.getElementById('detail-years-input').value = state.years || '';
     document.getElementById('detail-rate-input').value = state.rate || '';
-    showCard('detail-card')te.rate || '';
     showCard('detail-card');
   }
 
