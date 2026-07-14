@@ -601,7 +601,8 @@
   function showResultCard() {
     renderResult(state.amount, state.years, state.rate);
     showCard('result-card');
-    launchConfetti();
+    const { total } = calcSim(state.amount, state.years, state.rate);
+    if (total >= 100000000) launchConfetti();
   }
 
   function renderResult(monthly, years, rate) {
