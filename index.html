@@ -196,7 +196,7 @@
     <div class="cover-card">
       <img src="4.png" alt="積立シミュレーター" class="cover-img">
       <div class="cover-body">
-        <p class="cover-disclaimer">※本ツールはシミュレーションです。将来の運璨成果を保証するものではありません。</p>
+        <p class="cover-disclaimer">※本ツールはシミュレーションです。将来の運用成果を保証するものではありません。</p>
         <button class="btn-start" onclick="startApp()">シミュレーション開始 🚀</button>
       </div>
     </div>
@@ -312,7 +312,7 @@
           <div class="chart-legend-dot" style="background:#4ade80;"></div>積立元本
         </div>
         <div class="chart-legend-item">
-          <div class="chart-legend-dot" style="background:#fbbf24;"></div>運璨益
+          <div class="chart-legend-dot" style="background:#fbbf24;"></div>運用益
         </div>
       </div>
       <div class="chart-container">
@@ -424,7 +424,7 @@
         continue;
       }
       const { total, principal } = calcSim(monthly, y, rate);
-      labels.push(`${y}鹴後`);
+      labels.push(`${y}年後`);
       principalData.push(Math.round(principal / 10000));
       totalData.push(Math.round(total / 10000));
     }
