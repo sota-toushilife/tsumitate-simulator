@@ -301,7 +301,7 @@
 
     <!-- 銀行比較（コンパクト） -->
     <div class="bank-note">
-      銀行（年利0.1%）に預けた場合：<strong id="bank-amount">---</strong>円
+      銀行（年利0.1%）に預けた場合：<strong id="bank-amount">---</strong>万円
     </div>
 
         <!-- グラフ（面グラフ） -->
@@ -638,7 +638,7 @@
     }
 
     // Bank
-    document.getElementById('bank-amount').textContent = fmt(bankTotal);
+    document.getElementById('bank-amount').textContent = fmtMan(bankTotal);
 
     drawChart(monthly, years, rate);
   }
