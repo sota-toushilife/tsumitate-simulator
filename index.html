@@ -301,7 +301,7 @@
 
     <!-- 銀行比較（コンパクト） -->
     <div class="bank-note">
-      銀行（年利0.1%）に預けた場合：<strong id="bank-amount">---</strong>万円
+      銀行（年利0.1%）に預けた場合：<strong id="bank-amount">---</strong>円
     </div>
 
         <!-- グラフ（面グラフ） -->
@@ -384,11 +384,19 @@
 
   // --- Calculation ---
   function calcSim(monthly, years, annualRate) {
-    const mr = annualRate / 100 / 12;
+    const r = annualRate / 100; // 年利（小数）
     const months = years * 12;
     const principal = monthly * months;
-    const total = mr < 1e-10 ? principal
-      : monthly * (Math.pow(1 + mr, months) - 1) / mr;
+    // 金融庁方式: 年複利で各月の積立額を将来価値に換算して合計
+    let total = 0;
+    if (r < 1e-10) {
+      total = principal;
+    } else {
+      for (let m = 1; m <= months; m++) {
+        const remainingMonths = months - m;
+        total += monthly * Math.pow(1 + r, remainingMonths / 12);
+      }
+    }
     const gain = total - principal;
 
     const NISA_LIMIT = 18000000;
