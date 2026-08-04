@@ -379,7 +379,7 @@
       const remain = man % 10000;
       return remain > 0 ? oku.toLocaleString('ja-JP') + '億' + remain.toLocaleString('ja-JP') + '万' : oku.toLocaleString('ja-JP') + '億';
     }
-    return man.toLocaleString('ja-JP') + '万';
+    return (Math.round(n / 1000) / 10).toLocaleString('ja-JP') + '万';
   }
 
   // --- Calculation ---
