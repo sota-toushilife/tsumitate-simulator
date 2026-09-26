@@ -403,6 +403,7 @@
     let afterTax = total, taxAmount = 0, exceedMonth = null;
 
     if (principal > NISA_LIMIT) {
+      const mr = r / 12;  // 月利（修正：未定義だったのを追加）
       const nm = Math.floor(NISA_LIMIT / monthly);
       exceedMonth = nm;
       const nisaTotal = mr < 1e-10 ? monthly * nm
